@@ -28,7 +28,7 @@ class ProductModel {
         disprice: json['pricediscount'] ?? "",
         discont: json['discount'] ?? "",
         category: json['category'],
-        available: json['available'] ?? 0,
+        available: int.parse(json['available']) ?? 0,
         details: json['details'],
         image: json['image'] ?? "");
   }
