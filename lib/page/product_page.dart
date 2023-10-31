@@ -1,19 +1,54 @@
+import 'package:ecommerce_management/main.dart';
+import 'package:ecommerce_management/model/product_bloc.dart';
 import 'package:ecommerce_management/model/product_model.dart';
 import 'package:ecommerce_management/page/compnent/item_product.dart';
 import 'package:ecommerce_management/page/compnent/product_dialog.dart';
+import 'package:ecommerce_management/page/compnent/serach.dart';
 import 'package:ecommerce_management/server/product_server.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ProductPage extends StatefulWidget {
   const ProductPage({super.key});
+  static var pbloc = ProductBloc();
+  static bool isLoading = true;
 
   @override
   State<ProductPage> createState() => _ProductPageState();
 }
 
 class _ProductPageState extends State<ProductPage> {
+  final ScrollController scrollController = ScrollController();
+
   void refresh() {
     setState(() {});
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    scrollController.addListener(() {
+      if (scrollController.position.pixels ==
+          scrollController.position.maxScrollExtent) {
+        print("scroll");
+        loadMoreItems();
+      }
+    });
+  }
+
+  void loadMoreItems() {
+    if (ProductPage.isLoading) {
+      ProductServer.getProduct(MyApp.page);
+      print("page $ProductPage.page");
+    }
+  }
+
+  @override
+  void dispose() {
+    scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -22,6 +57,29 @@ class _ProductPageState extends State<ProductPage> {
     return SafeArea(
       child: Scaffold(
         backgroundColor: Color.fromARGB(31, 131, 128, 128),
+        appBar: AppBar(
+          backgroundColor: const Color.fromARGB(255, 239, 106, 38),
+          elevation: 5,
+          title: const Text(
+            'Products',
+            style: TextStyle(
+                color: Color.fromARGB(255, 255, 255, 255),
+                fontSize: 25,
+                fontWeight: FontWeight.bold),
+          ),
+          actions: [
+            IconButton(
+              icon: const Icon(
+                Icons.search,
+                size: 30,
+              ),
+              onPressed: () {
+                showSearch(
+                    context: context, delegate: MySearch(refresh: refresh));
+              },
+            ),
+          ],
+        ),
         body: Container(
           child: Column(
             children: [
@@ -56,33 +114,50 @@ class _ProductPageState extends State<ProductPage> {
               Expanded(
                 flex: 6,
                 child: FutureBuilder(
-                  future: ProductServer.getProduct(),
+                  future: ProductServer.getProduct(MyApp.page),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(
                           child: CircularProgressIndicator(
                               color: Color.fromARGB(255, 251, 88, 0)));
                     } else if (snapshot.hasData) {
-                      List<ProductModel> list =
-                          snapshot.data as List<ProductModel>;
+                      if (snapshot.hasData) {
+                        return BlocBuilder(
+                          bloc: ProductPage.pbloc,
+                          builder: (context, state) {
+                            List<ProductModel> list = MyApp.l.toSet().toList();
 
-                      if (list.isNotEmpty) {
-                        return GridView.builder(
-                            physics: const BouncingScrollPhysics(),
-                            itemCount: snapshot.data?.length,
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 1,
-                                    childAspectRatio: 1.8,
-                                    mainAxisSpacing: 1.0,
-                                    crossAxisSpacing: 1.0),
-                            itemBuilder: (BuildContext context, int index) {
-                              return Padding(
-                                padding: EdgeInsets.all(8.0),
-                                child: ProductItem(
-                                    product: list[index], state: refresh),
-                              );
-                            });
+                            return GridView.builder(
+                                // physics: const BouncingScrollPhysics(),
+                                controller: scrollController,
+                                itemCount: list.length + 1,
+                                gridDelegate:
+                                    const SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: 1,
+                                        childAspectRatio: 1.8,
+                                        mainAxisSpacing: 1.0,
+                                        crossAxisSpacing: 1.0),
+                                itemBuilder: (BuildContext context, int index) {
+                                  if (index < list.length) {
+                                    return Padding(
+                                      padding: EdgeInsets.all(8.0),
+                                      child: ProductItem(
+                                          product: list[index], state: refresh),
+                                    );
+                                  } else {
+                                    if (ProductPage.isLoading) {
+                                      return const Center(
+                                        child: CircularProgressIndicator(
+                                            color: Color.fromARGB(
+                                                255, 251, 88, 0)),
+                                      );
+                                    } else {
+                                      return Container();
+                                    }
+                                  }
+                                });
+                          },
+                        );
                       } else {
                         return Center(
                             child: Image.asset('assets/image/wish.png'));

@@ -1,6 +1,8 @@
 class Api {
   static String baseurl = 'https://rayka.opecommerce.com/index.php';
   static String getallproduct = "${Api.baseurl}/api/v1/getAllProduct";
+  static String serachproduct = "${Api.baseurl}/api/v1/searchp";
+
   static String addproduct = "${Api.baseurl}/api/v1/AddProduct";
   static String deleteproduct = "${Api.baseurl}/api/v1/DeleteProduct";
   static String updateproduct = "${Api.baseurl}/api/v1/UpdateProduct";

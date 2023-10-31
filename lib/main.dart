@@ -1,5 +1,6 @@
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:ecommerce_management/model/navigationbarCubit.dart';
+import 'package:ecommerce_management/model/product_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -9,6 +10,8 @@ void main() {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+  static List<ProductModel> l = [];
+  static int page = 1;
 
   // This widget is the root of your application.
   @override
